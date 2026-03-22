@@ -9,4 +9,4 @@ It uses Arabic Reshaper and Bidi Algorithm libraries for the proper display of A
 
 Also the data (which is not included since it belongs to the stakeholder) had to be preprocessed using Python and Excel for the proper displaying and working of the app. Including the removal of Arabic diacritics. 
 
-But overall it was a great experience.
+But overall it was a great learning experience.

@@ -1,0 +1,565 @@
+#:import Factory kivy.factory.Factory
+#:import process_arabic_text main.process_arabic_text
+
+# Vertical Separator Line
+<VSep@Widget>:
+    size_hint: None, 1
+    width: dp(1)
+    canvas:
+        Color:
+            rgba: 0.7, 0.7, 0.7, 1 # Gray line color
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+<TableLabel@Label>:
+    size_hint_y: None
+    height: self.texture_size[1]
+    text_size: self.width, None
+    halign: 'center'
+    valign: 'middle'
+    # Moved padding here so the widget height includes the space
+    # This allows the vertical lines to span the full height of the row
+    padding: dp(5), dp(17)
+    color: 0, 0, 0, 1
+    # This is the magic line for vertical centering:
+    pos_hint: {'center_y': 0.5}
+
+# 1. The Row Template
+<TableRow>:
+    orientation: 'horizontal'
+    size_hint_y: None
+    height: self.minimum_height
+    # Horizontal Separator (Bottom Line)
+    canvas.before:
+        Color:
+            rgba: 0.7, 0.7, 0.7, 1
+        Line:
+            points: [self.x, self.y, self.width, self.y]
+            width: 1
+
+    # COLUMNS (Weights must sum to approx 1 or 10, just keep ratios consistent)
+    # The weights correspond to: ID, Morpheme, Class, Surah, Aya, Type
+
+    # Col 8: Sources
+    TableLabel:
+        text: root.ref_col
+        size_hint_x: 2
+
+    # Col 7: Word Type
+    VSep:
+    TableLabel:
+        text: root.wtype_col
+        size_hint_x: 0.5
+
+    # Col 6: Aya
+    VSep:
+    TableLabel:
+        text: root.aya_col
+        size_hint_x: 0.5
+
+    # Col 5: Mecca/Medina
+    VSep:
+    TableLabel:
+        text: root.meccaormedina_col
+        size_hint_x: 0.5
+
+    # Col 4: Surah
+    VSep:
+    TableLabel:
+        text: root.surah_col
+        size_hint_x: 0.5
+
+    # Col 3: Classification (Needs the most space)
+    VSep:
+    TableLabel:
+        text: root.classification_col
+        size_hint_x: 1.5
+
+    # Col 2: Morpheme
+    VSep:
+    TableLabel:
+        text: root.morpheme_col
+        size_hint_x: 1
+
+    # Col 1: ID
+    VSep:
+    TableLabel:
+        text: root.id_col
+        size_hint_x: 0.5
+
+<MultiLineOption@SpinnerOption>:
+    # Allow the height to be dynamic
+    size_hint_y: None
+
+    # This is the "Stitching" logic:
+    # It takes the height of the wrapped text (texture_size[1])
+    # and adds some padding (dp(20))
+    height: max(dp(48), self.texture_size[1] + dp(20))
+
+    # This is the "Breaking" logic:
+    # We constrain the text width to the button width so it knows where to wrap
+    text_size: self.width - dp(10), None
+    halign: 'center'
+    valign: 'middle'
+    background_normal: ''             # Removes default grey tint
+    background_color: 0.91, 0.89, 0.81, 1
+    color: 0, 0, 0, 1
+    canvas.after:
+        Color:
+            rgba: 0.8, 0.8, 0.8, 1     # Border/Divider Color
+        Rectangle:
+            size: self.width, dp(1)     # 1dp thick line
+            pos: self.x, self.y
+
+<DropDownStyles@DropDown>:
+    max_height: dp(400)
+
+<CustomSpinnerOption@SpinnerOption>:
+    background_normal: ''             # Removes default grey tint
+    background_color: 0.91, 0.89, 0.81, 1
+    color: 0, 0, 0, 1
+    canvas.after:
+        Color:
+            rgba: 0.8, 0.8, 0.8, 1      # Border/Divider Color
+        Rectangle:
+            size: self.width, dp(1)     # 1dp thick line
+            pos: self.x, self.y
+
+<ArabicRecordRow@Button>:
+    text: ''
+    halign: 'center'
+    valign: 'middle'
+    text_size: self.width, None
+    size_hint_y: None
+    height: max(dp(48), self.texture_size[1] + dp(20))
+    background_normal: ''             # Removes default grey tint
+    background_color: 0.91, 0.89, 0.81, 1
+    color: 0, 0, 0, 1
+    select_callback: None
+    on_release: if self.select_callback: self.select_callback(self.text)
+    canvas.after:
+        Color:
+            rgba: 0.8, 0.8, 0.8, 1      # Border/Divider Color
+        Rectangle:
+            size: self.width, dp(1)     # 1dp thick line
+            pos: self.x, self.y
+
+<RefDropdown>:
+    size_hint: None, None
+    height: dp(400)
+    auto_dismiss: True
+    background_color: 0, 0, 0, 0  # Transparent background
+    background: ''                # No default image
+    overlay_color: 0, 0, 0, 0     # No dimming of the background
+
+    # This is the actual container for the list
+    RecycleView:
+        id: source_text
+        viewclass: 'ArabicRecordRow'
+        size_hint: 1, 1
+
+        RecycleBoxLayout:
+            default_size: None, None
+            default_size_hint: 1, None
+            size_hint_y: None
+            height: self.minimum_height
+            orientation: 'vertical'
+            # Add a background so the text is readable over other widgets
+            canvas.before:
+                Color:
+                    rgba: 1, 1, 1, 1
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+                Color:
+                    rgba: 0.8, 0.8, 0.8, 1
+                Line:
+                    rectangle: self.x, self.y, self.width, self.height
+
+<WindowLayoutBox>:
+    orientation: 'vertical'
+    canvas.before:
+        Color:
+            rgb: 1, 1, 1  # RGB values for white
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    GridLayout:
+        size_hint: 1, 0.4
+        padding: [0, 0, 0, '10dp']
+        rows: 2
+        GridLayout:
+            size_hint: 1, 2
+            padding: ['10dp', '20dp', 0, '5dp']
+            rows: 2
+            FloatLayout:
+                Label:
+                    text: process_arabic_text("رقم الآية")
+                    pos_hint: {'right': 0.9, 'y': 0.77} # Adjust 'y' for vertical placement
+                    text_size: self.size
+                    halign: 'right'
+                    color: 0,0,0,1
+                TextInput:
+                    size_hint: 0.85, None
+                    height: '30dp'
+                    padding_y: [self.height / 2.0 - (self.line_height / 2.0), 0]
+                    pos_hint: {'right': 0.9, 'y': 0.2}
+                    multiline: False
+                    id: aya_num
+                    input_filter: 'int'
+                    halign: 'right'
+
+            FloatLayout:
+                Label:
+                    text: process_arabic_text("مكان النزول")
+                    pos_hint: {'right': 0.9, 'y': 0.77} # Adjust 'y' for vertical placement
+                    text_size: self.size
+                    halign: 'right'
+                    color: 0,0,0,1
+                Spinner:
+                    size_hint: 0.85, None
+                    height: '30dp'
+                    pos_hint: {'right': 0.9, 'y': 0.2}
+                    values: 'ﺔﻴﻜﻣ','ﺔﻴﻧﺪﻣ'
+                    id: meccaormedina_text
+                    halign: 'right'
+                    text_size: self.width - 0, self.height - (self.padding[1] + self.padding[3])
+                    background_normal: 'atlas://data/images/defaulttheme/textinput'
+                    background_active: 'atlas://data/images/defaulttheme/textinput_active'
+                    background_color: (1, 1, 1, 1)
+                    border: (4, 4, 4, 4)  # Match TextInput's default border
+                    color: (0, 0, 0, 1)
+                    padding: [25, 0, 7, 4]  # Extra left padding for arrow
+                    option_cls: Factory.CustomSpinnerOption
+                    canvas.after:
+                        # Draw downward-pointing arrow on the left
+                        Color:
+                            rgb: 0.4, 0.4, 0.4
+                        Triangle:
+                            points:
+                                self.x + 8, self.center_y + 4, \
+                                self.x + 13, self.center_y - 4, \
+                                self.x + 18, self.center_y + 4
+
+                        # Optional: subtle left border to separate arrow area
+                        Color:
+                            rgba: 0.9, 0.9, 0.9, 1
+                        Line:
+                            points: self.x + 25, self.y, self.x + 25, self.top
+                            width: 1
+
+            FloatLayout:
+                Label:
+                    text: process_arabic_text("اسم السورة")
+                    pos_hint: {'right': 0.9, 'y': 0.77} # Adjust 'y' for vertical placement
+                    text_size: self.size
+                    halign: 'right'
+                    color: 0,0,0,1
+                Spinner:
+                    size_hint: 0.85, None
+                    height: '30dp'
+                    pos_hint: {'right': 0.9, 'y': 0.2}
+                    id: surah_text
+                    values: []
+                    on_text: root.update_textinput(self.text,"surah_list")
+                    on_is_open: root.on_spinner_close(self, "surah_list") if not self.is_open else None
+                    dropdown_cls: Factory.DropDownStyles
+                    option_cls: Factory.CustomSpinnerOption
+                ArabicTextInput:
+                    size_hint: 0.85, None
+                    height: '30dp'
+                    padding_y: [self.height / 2.0 - (self.line_height / 2.0), 0]
+                    pos_hint: {'right': 0.9, 'y': 0.2}
+                    halign: 'right'
+                    multiline: False
+                    id: surah_search
+                    on_focus: root.open_spinner("surah_list") if self.focus else None
+                    on_text: root.filter_options(self.text,"surah_list")
+                    canvas.after:
+                        # Draw downward-pointing arrow on the left
+                        Color:
+                            rgb: 0.4, 0.4, 0.4
+                        Triangle:
+                            points:
+                                self.x + 8, self.center_y + 4, \
+                                self.x + 13, self.center_y - 4, \
+                                self.x + 18, self.center_y + 4
+
+                        # Optional: subtle left border to separate arrow area
+                        Color:
+                            rgba: 0.9, 0.9, 0.9, 1
+                        Line:
+                            points: self.x + 25, self.y, self.x + 25, self.top
+                            width: 1
+
+            FloatLayout:
+                Label:
+                    text: process_arabic_text("مورفيم")
+                    pos_hint: {'right': 0.9, 'y': 0.77} # Adjust 'y' for vertical placement
+                    text_size: self.size
+                    halign: 'right'
+                    color: 0,0,0,1
+                ArabicTextInput:
+                    size_hint: 0.85, None
+                    height: '30dp'
+                    pos_hint: {'right': 0.9, 'y': 0.2}
+                    padding_y: [self.height / 2.0 - (self.line_height / 2.0), 0]
+                    multiline: False
+                    id: morpheme_text
+                    halign: 'right'
+
+            Widget:
+                size_hint: 1,1
+
+            FloatLayout:
+                Label:
+                    text: process_arabic_text("المرجع")
+                    color: 0,0,0,1
+                    pos_hint: {'right': 0.9, 'y': 0.77} # Adjust 'y' for vertical placement
+                    text_size: self.size
+                    halign: 'right'
+                ArabicTextInput:
+                    size_hint: 0.85, None
+                    height: '30dp'
+                    pos_hint: {'right': 0.9, 'y': 0.2}
+                    halign: 'right'
+                    multiline: False
+                    padding_y: [self.height / 2.0 - (self.line_height / 2.0), 8]
+                    padding_x: [30, 7]
+                    id: source_search
+                    on_focus: root.open_spinner("ref_list", self) if self.focus else None
+                    on_text: root.filter_options(self.text,"ref_list")
+                    canvas.after:
+                        # Draw downward-pointing arrow on the left
+                        Color:
+                            rgb: 0.4, 0.4, 0.4
+                        Triangle:
+                            points:
+                                self.x + 8, self.center_y + 4, \
+                                self.x + 13, self.center_y - 4, \
+                                self.x + 18, self.center_y + 4
+
+                        # Optional: subtle left border to separate arrow area
+                        Color:
+                            rgba: 0.9, 0.9, 0.9, 1
+                        Line:
+                            points: self.x + 25, self.y, self.x + 25, self.top
+                            width: 1
+
+            FloatLayout:
+                Label:
+                    text: process_arabic_text("نوع الكلمة")
+                    pos_hint: {'right': 0.9, 'y': 0.77} # Adjust 'y' for vertical placement
+                    text_size: self.size
+                    halign: 'right'
+                    color: 0,0,0,1
+                Spinner:
+                    size_hint: 0.85, None
+                    height: '30dp'
+                    pos_hint: {'right': 0.9, 'y': 0.2}
+                    values: 'ﻢﺳﺍ','ﻞﻌﻓ','ﻑﺮﺣ'
+                    id: wtype_text
+                    halign: 'right'
+                    text_size: self.width - 0, self.height - (self.padding[1] + self.padding[3])
+                    background_normal: 'atlas://data/images/defaulttheme/textinput'
+                    background_active: 'atlas://data/images/defaulttheme/textinput_active'
+                    background_color: (1, 1, 1, 1)
+                    border: (4, 4, 4, 4)  # Match TextInput's default border
+                    color: (0, 0, 0, 1)
+                    padding: [25, 0, 7, 4]  # Extra left padding for arrow
+                    option_cls: Factory.CustomSpinnerOption
+                    canvas.after:
+                        # Draw downward-pointing arrow on the left
+                        Color:
+                            rgb: 0.4, 0.4, 0.4
+                        Triangle:
+                            points:
+                                self.x + 8, self.center_y + 4, \
+                                self.x + 13, self.center_y - 4, \
+                                self.x + 18, self.center_y + 4
+
+                        # Optional: subtle left border to separate arrow area
+                        Color:
+                            rgba: 0.9, 0.9, 0.9, 1
+                        Line:
+                            points: self.x + 25, self.y, self.x + 25, self.top
+                            width: 1
+
+            FloatLayout:
+                Label:
+                    text: process_arabic_text("التصنيف الصرفي")
+                    color: 0,0,0,1
+                    pos_hint: {'right': 0.9, 'y': 0.77} # Adjust 'y' for vertical placement
+                    text_size: self.size
+                    halign: 'right'
+                Spinner:
+                    size_hint: 0.85, None
+                    height: '30dp'
+                    pos_hint: {'right': 0.9, 'y': 0.2}
+                    id: classification_text
+                    values: []
+                    text_size: self.size
+                    on_text: root.update_textinput(self.text, "mclass_list")
+                    on_is_open: root.on_spinner_close(self, "mclass_list") if not self.is_open else None
+                    dropdown_cls: Factory.DropDownStyles
+                    option_cls: Factory.MultiLineOption
+                ArabicTextInput:
+                    size_hint: 0.85, None
+                    height: '30dp'
+                    pos_hint: {'right': 0.9, 'y': 0.2}
+                    halign: 'right'
+                    multiline: False
+                    padding_y: [self.height / 2.0 - (self.line_height / 2.0), 8]
+                    padding_x: [30, 7]
+                    id: classification_search
+                    on_focus: root.open_spinner(list_type = "mclass_list") if self.focus else None
+                    on_text: root.filter_options(self.text,"mclass_list")
+                    canvas.after:
+                        # Draw downward-pointing arrow on the left
+                        Color:
+                            rgb: 0.4, 0.4, 0.4
+                        Triangle:
+                            points:
+                                self.x + 8, self.center_y + 4, \
+                                self.x + 13, self.center_y - 4, \
+                                self.x + 18, self.center_y + 4
+
+                        # Optional: subtle left border to separate arrow area
+                        Color:
+                            rgba: 0.9, 0.9, 0.9, 1
+                        Line:
+                            points: self.x + 25, self.y, self.x + 25, self.top
+                            width: 1
+
+        StackLayout:
+            size_hint: 1, 0.5
+            orientation: 'lr-bt'
+            padding: ('5dp',0,'5dp',0)
+            spacing: '5dp', 0
+
+            Button:
+                text: process_arabic_text("بحث")
+                size_hint: 0.2,1
+                on_press: root.search_button_click()
+                background_normal: ''  # Required to see the actual color
+                background_color: 0.376, 0.106, 0.024, 1
+
+            Button:
+                text: process_arabic_text("تفريغ الحقول")
+                size_hint: 0.2,1
+                on_press: root.reset_button_click()
+                background_normal: ''  # Required to see the actual color
+                background_color: 0.376, 0.106, 0.024, 1
+
+            Widget:
+                size_hint: 0.28,1
+
+            Label:
+                text: ''
+                id: results_count
+                color: 0.2, 0.2, 0.2, 1
+                size_hint: 0.1, 1
+                text_size: self.size
+                halign: 'center'
+                valign: 'middle'
+                canvas.before:
+                    Color:
+                        rgba: 0.92, 0.92, 0.92, 1 # Light grey background
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [10,] # Rounded corners
+
+            Label:
+                text: process_arabic_text("عدد النتائج")
+                color: 1, 1, 1, 1 # White text
+                size_hint: 0.2, 1
+                halign: 'center'
+                valign: 'middle'
+                canvas.before:
+                    Color:
+                        rgba: 0.376, 0.106, 0.024, 1 # Semi-transparent version of button color
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [10,]
+
+    # --- TABLE HEADER ---
+    BoxLayout:
+        size_hint_y: None
+        height: dp(45)
+        spacing: 0
+        canvas.before:
+            Color:
+                rgba: 0.376, 0.106, 0.024, 1 # Header Color
+            Rectangle:
+                pos: self.pos
+                size: self.size
+            Color:
+                rgba: 0.7, 0.7, 0.7, 1
+            Line:
+                points: [self.x, self.top, self.right, self.top]
+                width: dp(1.5) # Thick top line
+                cap: 'square'
+
+        # Header Columns (Must use EXACT SAME size_hint_x as TableRow)
+        Label:
+            text: process_arabic_text("المرجع")
+            size_hint_x: 2
+        VSep:
+        Label:
+            text: process_arabic_text("نوع الكلمة")
+            size_hint_x: 0.5
+        VSep:
+        Label:
+            text: process_arabic_text("الآية")
+            size_hint_x: 0.5
+        VSep:
+        Label:
+            text: process_arabic_text("مكان النزول")
+            size_hint_x: 0.5
+        VSep:
+        Label:
+            text: process_arabic_text("السورة")
+            size_hint_x: 0.5
+        VSep:
+        Label:
+            text: process_arabic_text("التصنيف الصرفي")
+            size_hint_x: 1.5
+        VSep:
+        Label:
+            text: process_arabic_text("المورفيم")
+            size_hint_x: 1
+        VSep:
+        Label:
+            text: process_arabic_text("م")
+            size_hint_x: 0.5
+
+    # --- THE DATA TABLE ---
+    MorphTable:
+        id: results_table
+        viewclass: 'TableRow'  # Use the template we defined above
+
+        RecycleBoxLayout:
+            default_size: None, dp(56)
+            default_size_hint: 1, None
+            size_hint_y: None
+            height: self.minimum_height
+            orientation: 'vertical'
+            spacing: 0
+
+<LoadingScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        canvas.before:
+            Color:
+                rgba: 1, 1, 1, 1 # White background
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+        Label:
+            text: process_arabic_text("جاري التحميل، يرجى الانتظار...") #
+            color: 0, 0, 0, 1
+            font_size: '32sp'
